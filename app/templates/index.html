@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <div style="width: 60%; margin: 40px auto;">
+    <canvas id="grafico"></canvas>
+</div>
+    <meta charset="UTF-8">
+    <title>Dashboard de Vendas</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #eef1f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #555;
+        }
+
+        .card p {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #111;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tr:hover {
+            background: #e0e7ff;
+        }
+
+        .alert-row {
+            background: #fee2e2 !important;
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .alert-box {
+            background: #fff;
+            border-left: 5px solid #dc2626;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .alert-box h3 {
+            margin-top: 0;
+            color: #dc2626;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<header>
+    📊 Dashboard de Vendas
+</header>
+
+<div class="container">
+
+    <div class="cards">
+        <div class="card">
+            <h2>Total de Vendas</h2>
+            <p id="total"></p>
+        </div>
+
+        <div class="card">
+            <h2>Média de Vendas</h2>
+            <p id="media"></p>
+        </div>
+    </div>
+
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>Preço</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="alert-box">
+        <h3>🚨 Alertas (abaixo da média)</h3>
+        <ul id="alertas"></ul>
+    </div>
+
+</div>
+
+<script>
+    function criarGrafico(data) {
+    let produtos = {};
+    
+    data.forEach(item => {
+        if (!produtos[item.produto]) {
+            produtos[item.produto] = 0;
+        }
+        produtos[item.produto] += item.total;
+    });
+
+    let labels = Object.keys(produtos);
+    let valores = Object.values(produtos);
+
+    const ctx = document.getElementById('grafico').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Vendas por Produto',
+                data: valores,
+                borderWidth: 1
+            }]
+        }
+    });
+}
+    let vendasGlobais = [];
+
+    fetch('/vendas')
+        .then(res => res.json())
+        .then(data => {
+            vendasGlobais = data;
+
+            let tabela = document.querySelector("#tabela tbody");
+
+            let total = 0;
+
+            data.forEach(item => {
+                total += item.total;
+
+                let linha = `
+                    <tr>
+                        <td>${item.data}</td>
+                        <td>${item.produto}</td>
+                        <td>${item.quantidade}</td>
+                        <td>R$ ${item.preco}</td>
+                        <td>R$ ${item.total}</td>
+                    </tr>
+                `;
+                tabela.innerHTML += linha;
+            });
+
+            let media = total / data.length;
+
+            document.getElementById("total").innerText = "R$ " + total;
+            document.getElementById("media").innerText = "R$ " + media.toFixed(2);
+
+            destacarAlertas(media);
+            criarGrafico(data);
+        });
+
+    function destacarAlertas(media) {
+        let linhas = document.querySelectorAll("#tabela tbody tr");
+        let lista = document.getElementById("alertas");
+
+        vendasGlobais.forEach((item, index) => {
+            if (item.total < media) {
+                linhas[index].classList.add("alert-row");
+
+                lista.innerHTML += `<li>${item.produto} - R$ ${item.total}</li>`;
+            }
+        });
+
+        if (lista.innerHTML === "") {
+            lista.innerHTML = "<li>✅ Nenhum alerta</li>";
+        }
+    }
+</script>
+
+</body>
+</html>
