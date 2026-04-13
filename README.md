@@ -12,7 +12,7 @@ Este projeto tem como objetivo automatizar o processo de extração, transforma�
 
 ## ⚙️ Tecnologias Utilizadas
 
-- Python 🐍
+- Python
 - Pandas
 - Automação de processos (ETL)
 - Jupyter Notebook (se aplicável)
