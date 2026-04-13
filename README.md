@@ -59,7 +59,6 @@ Os dados tratados permitem:
 ## 👨‍💻 Autor
 
 Gustavo Gilson Arruda Sales sou estudante de Análise e Desenvolvimento de Sistemas focado em Python, Automação e Dados.
-Focado em Python, Automação e Dados
 
 ---
 
